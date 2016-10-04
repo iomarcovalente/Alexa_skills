@@ -1,0 +1,22 @@
+{
+  "name": "naturalArchive",
+  "version": "1.0.0",
+  "description": "Natural Archive App for natural remedies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iomarcovalente"
+  },
+  "keywords": [
+    "natural",
+    "remedies"
+  ],
+  "author": "io.marco.valente",
+  "license": "ISC",
+  "dependencies": {
+    "alexa-sdk": "^1.0.3"
+  }
+}

@@ -1,0 +1,28 @@
+AMAZON.StartOverIntent restart
+AMAZON.StartOverIntent start
+AMAZON.StartOverIntent search new recipe
+
+RecipeReqIntent a remedy for {Issue}
+RecipeReqIntent a solution for {Issue}
+RecipeReqIntent how to get rid of {Issue}
+RecipeReqIntent how to cure {Issue}
+RecipeReqIntent a cure for {Issue}
+RecipeReqIntent soothe {Issue}
+RecipeReqIntent help me with my {Issue}
+RecipeReqIntent how to soothe {Issue}
+RecipeReqIntent solve {Issue}
+RecipeReqIntent {Issue} remedies
+RecipeReqIntent {Issue}
+
+ListReqIntent list
+ListReqIntent show me the list
+ListReqIntent tell me the list
+ListReqIntent give me the list
+ListReqIntent list of remedies
+ListReqIntent I want to hear the list
+
+ListReqIntent for the list of available remedies
+ListReqIntent show me the list of available remedies
+ListReqIntent tell me the list of available remedies
+ListReqIntent give me the list of available remedies
+ListReqIntent I want to hear the list of available remedies
