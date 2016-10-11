@@ -1,0 +1,40 @@
+{
+  "intents": [
+    {
+      "intent": "RecipeReqIntent",
+      "slots": [
+        {
+          "name": "Issue",
+          "type": "LIST_OF_ISSUES"
+        }
+      ]
+    },
+    {
+      "intent": "ListReqIntent"
+    },
+    {
+      "intent": "AMAZON.StartOverIntent"
+    },
+    {
+      "intent": "AMAZON.RepeatIntent"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    },
+    {
+      "intent": "AMAZON.YesIntent"
+    },
+    {
+      "intent": "AMAZON.NoIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    },
+    {
+      "intent": "AMAZON.NextIntent"
+    }
+  ]
+}
