@@ -1,5 +1,7 @@
 'use strict';
 
+var OpearloAnalytics = require('opearlo-analytics');
+
 var APP_NAME = 'Natural Archive'; 
 var APP_ID = 'amzn1.ask.skill.1ac0ee01-707a-4600-ab35-238842c6c7eb';
 var APP_STATES = {
@@ -145,23 +147,8 @@ var remedies = [
         'bruises': [
             'Apply arnica ointment or gel to the bruise daily. ',
             'To speed the paling process, apply ice as soon as possible, and take it off after 10 minutes and wait 20 minutes before reapplying. Wrapping an elasting bandage around the bruised part could help as well. ',
-        ],  'An all natural remedy involves in taking an handful of fresh parsley leaves, crushing them, and spreading them over the bruise, and wrapping the part with a bandage. '
-        'desc': [
-            'Arnica is an herb that has long been recommended for bruises. It contains a compound that reduces inflammation and swelling.',
-            'By cooling the blod vessels around the bruised area less blood will leak out into the surrounding tissue. The same applies for bandaging the part.',
-            'Some experts claim that parsley decreases inflammation, reduces pain, and can make the bruise fade more quickly.'
+            'An all natural remedy involves in taking an handful of fresh parsley leaves, crushing them, and spreading them over the bruise, and wrapping the part with a bandage. '
         ],
-        'imgs': [
-            ['https://s3.amazonaws.com/herbalist-bucket/arnica.jpg'],//neem
-            ['https://s3.amazonaws.com/herbalist-bucket/ice.jpg'],//coconoil
-            ['https://s3.amazonaws.com/herbalist-bucket/parsley.jpg']//bakingsoda
-        ]
-    },
-    {
-        'dry hands': [
-            'Apply arnica ointment or gel to the bruise daily. ',
-            'To speed the paling process, apply ice as soon as possible, and take it off after 10 minutes and wait 20 minutes before reapplying. Wrapping an elasting bandage around the bruised part could help as well. ',
-        ],  'An all natural remedy involves in taking an handful of fresh parsley leaves, crushing them, and spreading them over the bruise, and wrapping the part with a bandage. '
         'desc': [
             'Arnica is an herb that has long been recommended for bruises. It contains a compound that reduces inflammation and swelling.',
             'By cooling the blod vessels around the bruised area less blood will leak out into the surrounding tissue. The same applies for bandaging the part.',
@@ -181,6 +168,15 @@ exports.handler = function(event, context, callback) {
     var alexa = Alexa.handler(event, context);
     alexa.appId = APP_ID;
     alexa.registerHandlers(newSessionHandlers, startStateHandlers, recipeStateHandlers, helpStateHandlers);
+    if(event.session.new) {
+        OpearloAnalytics.initializeAnalytics('N6qMoHRdDzdGxdSCGJnN7pHDeMB2', 'natural-archive', event.session);
+    }
+    if(event.request.type === "IntentRequest") {
+        OpearloAnalytics.registerVoiceEvent(event.session.user.userId, "IntentRequest", event.request.intent);
+    }
+    if(event.request.type === "LaunchRequest") {
+        OpearloAnalytics.registerVoiceEvent(event.session.user.userId, "LaunchRequest");
+    }
     alexa.execute();
 };
 
@@ -189,13 +185,13 @@ var newSessionHandlers = {
      * Entry point. Start a new session. Handle any setup logic here.
      */
     'NewSession': function () {
-        console.log(this.event.request.type);
+
         if (this.event.request.type !== "IntentRequest") {
             this.handler.state = APP_STATES.START;
             this.emitWithState('StartApp');
         }
         else {
-            if (this.event.request.intent.name === "ListReqIntent") {this.handler.state = APP_STATES.RECIPE; this.emitWithState('browseList');}
+            if (this.event.request.intent.name === "ListReqIntent") {this.handler.state = APP_STATES.RECIPE; this.emitWithState('ListReqIntent');}
             if (this.event.request.intent.name === "AMAZON.HelpIntent") {this.handler.state = APP_STATES.HELP; this.emitWithState('helpTheUser');}
             else {
                 this.handler.state = APP_STATES.RECIPE; 
@@ -212,15 +208,9 @@ var newSessionHandlers = {
 
 var startStateHandlers = Alexa.CreateStateHandler(APP_STATES.START, {
     'StartApp': function () { 
-        //need to insert a welcoming sound
-        
-        // if (this.event.request.type !== "LaunchRequest"){
-        //     this.handler.state = APP_STATES.RECIPE;
-        //     this.attributes['solutionNum']=0;
-        //     
-        // }
 
-        var speechOutput = this.event.session['new'] ? 'Welcome to '  + APP_NAME + ', your personal guide to natural remedies. ' : '';
+        var introSound = '<audio src=\'https://s3.amazonaws.com/herbalist-bucket/introSound.mp3\' />'
+        var speechOutput = this.event.session['new'] ? introSound + 'Welcome to '  + APP_NAME + ', your personal guide to natural remedies. ' : '';
         speechOutput += 'Ask me for a remedy. ';
 
         // Select a random remedy to suggest to the user
@@ -245,7 +235,8 @@ var startStateHandlers = Alexa.CreateStateHandler(APP_STATES.START, {
 });
 
 var recipeStateHandlers = Alexa.CreateStateHandler(APP_STATES.RECIPE, {
-    'browseList': function(){ 
+    'ListReqIntent': function(){ 
+        this.attributes['solutionNum'] = 0;
         var cardTitle = APP_NAME + " - List of available remedies";
         var cardContent = "";
         var speechOutput = 'Here is a list of issues you could ask a remedy for. ';
@@ -275,33 +266,38 @@ var recipeStateHandlers = Alexa.CreateStateHandler(APP_STATES.RECIPE, {
     'AMAZON.NextIntent': function () {
         handleUserRequest.call(this, this.attributes['solutionNum'],true);
     },
-    'ListReqIntent':function () {
-        this.attributes['solutionNum']=0;
-        this.emitWithState('browseList');
-    },
     'AMAZON.StartOverIntent': function () { 
         this.handler.state = APP_STATES.START;
         this.emitWithState('StartApp');
     },
     'AMAZON.RepeatIntent': function () { 
-        this.emit(':ask', this.attributes['speechOutput'], this.attributes['repromptText']);
+        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptText);
     },
     'AMAZON.HelpIntent': function () { 
         this.handler.state = APP_STATES.HELP;
         this.emitWithState('helpTheUser');
     },
-    'AMAZON.StopIntent': function () { 
-        this.handler.state = APP_STATES.HELP;
-        this.attributes['quit']=true;
-        this.emit(':ask', 'Would you like to quit?', 'Do you want to quit?');
-    },
     'AMAZON.CancelIntent': function () { 
-        this.emit(':tell', 'Ok, see you soon, and take care. Goodbye.');
+        exitAndSave.call(this);
+    },
+    'AMAZON.StopIntent': function () {
+        this.attributes['quit']=true;
+        this.emit(':ask', 'Would you like to quit?','Would you like to quit?')
+    },
+    'AMAZON.YesIntent': function() {
+        if (this.attributes['quit']){
+            exitAndSave.call(this);
+        } else {
+            this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptText);
+        }
+    },
+    'AMAZON.NoIntent': function() {
+        this.emitWithState('Unhandled');
     },
     'Unhandled': function () {
-        var speechOutput = 'I did not get what you said. Do you mind to repeat, please? ';
-        var repromptText = 'You could ask me a remedy for '+ this.attributes['selectedRemedy'] + ' for example. '
-        this.emit(':ask', speechOutput, this.attributes['repromptText']);
+        var repromptText = "Browse the list of remedies by saying, list, or start over by saying, restart.";
+        this.attributes['quit']=false;
+        this.emit(':ask', repromptText, repromptText);
     },
     'SessionEndedRequest': function () {
         console.log('Session ended in recipe state: ' + this.event.request.reason);
@@ -311,8 +307,8 @@ var recipeStateHandlers = Alexa.CreateStateHandler(APP_STATES.RECIPE, {
 var helpStateHandlers = Alexa.CreateStateHandler(APP_STATES.HELP, {
     'helpTheUser': function () {
         var speechOutput = APP_NAME + " is your collection of natural home remedies. " 
-            + "Access the list of available remedies by saying, list, or " //
-            + "ask for a different remedy at any time. " //handled
+            + "Access the list of available remedies by saying, list, or "
+            + "ask for a different remedy at any time. "
             + "After having listened to a recipe, to listen to it again say repeat, to listen to an alternative say next. " //
             + "Now, what would you like to do? ";
         var repromptText = "Browse the list of remedies by saying, list, or start over by saying, restart. "
@@ -323,56 +319,20 @@ var helpStateHandlers = Alexa.CreateStateHandler(APP_STATES.HELP, {
         "repromptText": repromptText,
         "quit": false
         });
-
-        this.emit(':ask', speechOutput, repromptText);
-    },
-    'RecipeReqIntent': function () { 
-        this.attributes['solutionNum']=0;
-        handleUserRequest.call(this, 0);
-    },
-    'ListReqIntent':function (){
         this.handler.state = APP_STATES.RECIPE;
-        this.emitWithState('browseList');
-    },
-    'AMAZON.RepeatIntent': function () {
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptText);
-    },
-    'AMAZON.HelpIntent': function() {
-        this.emitWithState('helpTheUser');
-    },
-    'AMAZON.YesIntent': function() {
-        if (this.attributes['quit']){
-            var speechOutput = 'Ok, see you soon, and take care. Goodbye! ';
-            this.emit(':tell', speechOutput);
-        } else {
-            this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptText);
-        }
-    },
-    'AMAZON.NoIntent': function() {
-        //this.handler.state = APP_STATES.RECIPE;
-        this.emitWithState('Unhandled');
-    },
-    'AMAZON.StopIntent': function () {
-        this.attributes['quit']=true;
-        this.emit(':ask', 'Would you like to quit?')
-    },
-    'AMAZON.CancelIntent': function () { 
-        this.emit(':tell', 'Ok, see you soon, and take care. Goodbye.');
-    },
-    'Unhandled': function () {
-        var repromptText = "Browse the list of remedies by saying, list, or start over by saying, restart. "
-            + "What would you like to do? ";
-        this.attributes['quit']=false;
-        this.emit(':ask', repromptText, repromptText);
-    },
-    'AMAZON.StartOverIntent': function () {
-        this.handler.state = APP_STATES.START;
-        this.emitWithState('StartApp');
+        this.emit(':ask', speechOutput, repromptText);
     },
     'SessionEndedRequest': function () {
         console.log('Session ended in help state: ' + this.event.request.reason);
     }
 });
+
+function exitAndSave(){
+    OpearloAnalytics.recordAnalytics(this.event.session.user.userId, "SiBFVe7TSE9zMNrKDJF3E6hE0NV4vm6y4OQroyRq", (result) => {
+      //Replace the placeholder function below with your last function call before the session is closed
+      this.emit(':tell', 'Ok, see you soon, and take care. Goodbye! ');
+    });
+}
 
 var reqRemedy;
 var idx;
@@ -440,7 +400,7 @@ function handleUserRequest(userSession,nextIntent) {
 
 function isIntentSlotValid(intent) {
     var reqSlotFilled = false;
-    if (intent.slots.Issue && intent.slots.Issue.value){
+    if (intent.slots && intent.slots.Issue && intent.slots.Issue.value){
 
         reqRemedy = intent.slots.Issue.value;
 

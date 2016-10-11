@@ -4,7 +4,7 @@
   "description": "Natural Archive App for natural remedies",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --timeout 1500"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,12 @@
   "author": "io.marco.valente",
   "license": "ISC",
   "dependencies": {
-    "alexa-sdk": "^1.0.3"
+    "alexa-sdk": "^1.0.3",
+    "opearlo-analytics": "^0.1.3"
+  },
+  "devDependencies": {
+    "bespoken-tools": "^0.7.5",
+    "chai": "^3.5.0",
+    "mocha": "^3.1.0"
   }
 }
